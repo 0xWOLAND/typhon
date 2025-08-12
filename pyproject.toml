@@ -1,0 +1,14 @@
+[project]
+name = "typhon"
+version = "0.1.0"
+description = "LLM code validation with mypy"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "mypy",
+    "ollama>=0.5.3",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
