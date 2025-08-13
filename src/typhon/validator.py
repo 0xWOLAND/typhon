@@ -6,18 +6,28 @@ from mypy import api
 
 def generate(llm: Any, prompt: str, signature: str, max_attempts: int = 5) -> Optional[str]:
     full_prompt = f"{prompt}\n\nImplement this function signature with a body:\n{signature}\n\nReturn only the complete function code."
+    feedback = ""
     
     for i in range(max_attempts):
         try:
-            response = llm(full_prompt).strip()
-            # Extract code from markdown blocks
+            attempt_prompt = f"{full_prompt}\n\n{feedback}"
+            response = llm(attempt_prompt).strip()
+
             code_match = re.search(r'```(?:python)?\s*(.*?)\s*```', response, re.DOTALL)
             code = code_match.group(1).strip() if code_match else response
+
             if _valid(code, signature):
                 return code
-        except Exception:
+
+            if not _signatures_match(code, signature):
+                feedback = "Note: your last attempt did not match the required function signature."
+            else:
+                result = api.run(['-c', code])
+                feedback = f"Note: your last attempt had a mypy error:\n{result[0]}"
+        except Exception as e:
+            feedback = f"Note: an exception occurred — {str(e)}"
             continue
-    
+
     return None
 
 
@@ -26,8 +36,6 @@ def _valid(code: str, signature: str) -> bool:
         return False
         
     result = api.run(['-c', code])
-    if result[2] != 0:
-        print(f"mypy error: {result[0]}")
     return result[2] == 0
 
 
