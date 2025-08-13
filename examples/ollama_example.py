@@ -1,5 +1,6 @@
 from typhon import generate
 import ollama
+import numpy as np
 
 def llm(prompt):
     response = ollama.generate(model="llama3", prompt=prompt)["response"]
@@ -8,12 +9,15 @@ def llm(prompt):
 
 code = generate(
     llm=llm,
-    prompt="Implement this function that adds two numbers",
-    signature="def add(a: int, b: int) -> int:",
+    prompt="Implement matrix multiplication using numpy",
+    signature="def matmul(a: np.ndarray, b: np.ndarray) -> np.ndarray:",
     max_attempts=3
 )
 
 if code:
-    print(f"Valid code: {code}")
+    exec(code, globals())
+    a = np.array([[1, 2], [3, 4]])
+    b = np.array([[5, 6], [7, 8]])
+    print(matmul(a, b))  # noqa: F821
 else:
     print("Failed to generate valid code")
